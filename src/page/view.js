@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import { useNavigate } from "react-router-dom";
 
@@ -15,6 +15,10 @@ function View(props) {
 
   const colCount = isSmallScreen ? 2 : isMediumScreen ? 3 : 4;
   const colCounts = {};
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   let colCode = "";
   const cols = [];

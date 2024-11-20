@@ -10,6 +10,7 @@ import {
   Select,
   Space,
   Typography,
+  message,
 } from "antd";
 import { useMediaQuery } from "react-responsive";
 import AdCarousel from "../component/advertise";
@@ -46,6 +47,20 @@ const App = (props) => {
   const showModal = () => setIsModalVisible(true);
   const handleOk = () => setIsModalVisible(false);
   const handleCancel = () => setIsModalVisible(false);
+
+  // 테스트 링크 공유 버튼
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        console.log("URL copied to clipboard!");
+        message.success("URL copied to clipboard!");
+      })
+      .catch((error) => {
+        console.error("Failed to copy URL:", error);
+      });
+  };
 
   return (
     <div style={{ overflowX: "hidden" }}>
@@ -215,6 +230,7 @@ const App = (props) => {
                   <Button
                     size="large"
                     type="link"
+                    onClick={handleShare}
                     style={{
                       color: theme === "dark" ? "#ddd" : "#111",
                     }}
