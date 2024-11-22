@@ -63,7 +63,7 @@ const App = (props) => {
   };
 
   return (
-    <div style={{ overflowX: "hidden" }}>
+    <div style={{ overflowX: "hidden", minHeight: "100vh" }}>
       <AdCarousel />
       <Space direction={size === "small" ? "vertical" : "horizontal"}>
         <Row>
@@ -172,7 +172,8 @@ const App = (props) => {
                 </Form.Item>
                 <Form.Item>
                   <Checkbox
-                    value={isAgree}
+                    // value={isAgree}
+                    checked={isAgree}
                     onClick={showModal}
                     onChange={(e) => setIsAgree(e.target.checked)}
                   >
@@ -182,7 +183,12 @@ const App = (props) => {
               </Form>
               <Row gutter={[16, 16]}>
                 <Col span={24}>
-                  <Button size="large" type="primary" style={{ width: "100%" }}>
+                  <Button
+                    size="large"
+                    type="primary"
+                    style={{ width: "100%" }}
+                    onClick={() => navigate("/test")}
+                  >
                     🔥 BDSM 테스트하러 가기
                   </Button>
                 </Col>
@@ -248,7 +254,8 @@ const App = (props) => {
         title={
           <Typography.Title className="title-small">약관동의</Typography.Title>
         }
-        visible={isModalVisible}
+        // visible={isModalVisible}
+        open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
         footer={[
@@ -288,7 +295,7 @@ const App = (props) => {
         <Typography.Paragraph className={`text-${size}`}>
           테스트는 100% 무료이며 익명으로 귀하의 정보가 필요하지 않습니다.
         </Typography.Paragraph>
-        <Button size="large" type="primary">
+        <Button size="large" type="primary" onClick={() => navigate("/test")}>
           🔥 BDSM 테스트하러 가기
         </Button>
       </div>
