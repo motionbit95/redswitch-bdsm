@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ConfigProvider, Button, FloatButton } from "antd";
+import { ConfigProvider, Button, FloatButton, Spin } from "antd";
 import { SunOutlined as Sun, MoonOutlined as Moon } from "@ant-design/icons";
 import Home from "./page/home";
 import Questions from "./page/questions";
@@ -11,6 +11,7 @@ import {
   Routes,
   useNavigate,
 } from "react-router-dom";
+import TestResult from "./page/result";
 
 const darkTheme = {
   components: {
@@ -171,6 +172,10 @@ const App = () => {
             <Route
               path="/view"
               element={<View theme={theme} setPage={setPage} />}
+            />
+            <Route
+              path="/result"
+              element={<TestResult theme={theme} setPage={setPage} />}
             />
           </Routes>
         </BrowserRouter>

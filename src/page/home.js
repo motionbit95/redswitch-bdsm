@@ -44,6 +44,8 @@ const App = (props) => {
   // Modal state
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const { form } = Form.useForm();
+
   const showModal = () => setIsModalVisible(true);
   const handleOk = () => setIsModalVisible(false);
   const handleCancel = () => setIsModalVisible(false);
@@ -60,6 +62,10 @@ const App = (props) => {
       .catch((error) => {
         console.error("Failed to copy URL:", error);
       });
+  };
+
+  const onFinish = (values) => {
+    navigate("/test", { state: { user_info: values } });
   };
 
   return (
@@ -105,8 +111,20 @@ const App = (props) => {
             }}
           >
             <div>
-              <Form {...formItemLayout}>
+              <Form
+                {...formItemLayout}
+                form={form}
+                onFinish={onFinish}
+                requiredMark={false}
+              >
                 <Form.Item
+                  name={"gender"}
+                  rules={[
+                    {
+                      required: true,
+                      message: "성별을 선택해주세요!",
+                    },
+                  ]}
                   label={
                     <Typography.Text
                       className="text-medium"
@@ -127,6 +145,13 @@ const App = (props) => {
                   </Select>
                 </Form.Item>
                 <Form.Item
+                  name={"age"}
+                  rules={[
+                    {
+                      required: true,
+                      message: "연령을 선택해주세요!",
+                    },
+                  ]}
                   label={
                     <Typography.Text
                       className="text-medium"
@@ -152,6 +177,13 @@ const App = (props) => {
                   </Select>
                 </Form.Item>
                 <Form.Item
+                  name={"sexual_preferance"}
+                  rules={[
+                    {
+                      required: true,
+                      message: "성적취향을 선택해주세요!",
+                    },
+                  ]}
                   label={
                     <Typography.Text
                       className="text-medium"
@@ -170,7 +202,24 @@ const App = (props) => {
                     <Select.Option value="기타">기타</Select.Option>
                   </Select>
                 </Form.Item>
-                <Form.Item>
+                <Form.Item
+                  name={"isAgree"}
+                  valuePropName="checked"
+                  rules={[
+                    {
+                      required: true,
+                      message: "이용약관 동의을 확인해주세요!",
+                    },
+                    {
+                      validator: (_, value) =>
+                        value
+                          ? Promise.resolve()
+                          : Promise.reject(
+                              new Error("이용약관 동의을 확인해주세요!")
+                            ),
+                    },
+                  ]}
+                >
                   <Checkbox
                     // value={isAgree}
                     checked={isAgree}
@@ -180,30 +229,30 @@ const App = (props) => {
                     이용약관 동의(필수)
                   </Checkbox>
                 </Form.Item>
+                <Row gutter={[16, 16]}>
+                  <Col span={24}>
+                    <Button
+                      size="large"
+                      type="primary"
+                      style={{ width: "100%" }}
+                      htmlType="submit"
+                    >
+                      🔥 BDSM 테스트하러 가기
+                    </Button>
+                  </Col>
+                  <Col span={24}>
+                    <Button
+                      size="large"
+                      style={{ width: "100%" }}
+                      onClick={() => {
+                        navigate("/view");
+                      }}
+                    >
+                      ⛓️ BDSM 성향모두보기
+                    </Button>
+                  </Col>
+                </Row>
               </Form>
-              <Row gutter={[16, 16]}>
-                <Col span={24}>
-                  <Button
-                    size="large"
-                    type="primary"
-                    style={{ width: "100%" }}
-                    onClick={() => navigate("/test")}
-                  >
-                    🔥 BDSM 테스트하러 가기
-                  </Button>
-                </Col>
-                <Col span={24}>
-                  <Button
-                    size="large"
-                    style={{ width: "100%" }}
-                    onClick={() => {
-                      navigate("/view");
-                    }}
-                  >
-                    ⛓️ BDSM 성향모두보기
-                  </Button>
-                </Col>
-              </Row>
             </div>
             <div style={{ paddingBlock: 16 }}>
               <Row gutter={[16, 16]}>
@@ -264,28 +313,55 @@ const App = (props) => {
           </Button>,
         ]}
       >
-        <Space direction="vertical">
-          <Typography.Text className="text-medium" style={{ textWrap: "wrap" }}>
-            이 테스트는 성적 행위를 노골적으로 묘사하는 문항을 포함하고
-            있습니다. 이러한 표현에 모멸감이나 혐오감을 느끼는 분들의 이용은
-            권장하지 않습니다.
-          </Typography.Text>
-          <Typography.Text className="text-medium" style={{ textWrap: "wrap" }}>
-            이 테스트의 모든 질문은 당사자 간의 완벽한 합의를 바탕으로,
-            절대적으로 안전하다는 가정 하에 작성되었습니다.
-          </Typography.Text>
-          <Typography.Text className="text-medium" style={{ textWrap: "wrap" }}>
-            이 테스트의 결과는 개발자의 주관적인 의견이 반영되어 있습니다.
-          </Typography.Text>
-          <Typography.Text className="text-medium" style={{ textWrap: "wrap" }}>
-            테스트 결과에 대해서는 어떠한 의미 부여도 하지 마시고, 반드시
-            개인적인 참고 용도로만 사용하시기 바랍니다.
-          </Typography.Text>
-          <Typography.Text className="text-medium" style={{ textWrap: "wrap" }}>
-            이 테스트를 참고하거나 활용하여 발생한 문제에 대한 책임은 모두
-            테스트를 이용한 당사자에게 있습니다.
-          </Typography.Text>
-        </Space>
+        <ul>
+          <Space direction="vertical" size={16}>
+            <li>
+              <Typography.Text
+                className="text-medium"
+                style={{ textWrap: "wrap" }}
+              >
+                이 테스트는 성적 행위를 노골적으로 묘사하는 문항을 포함하고
+                있습니다. 이러한 표현에 모멸감이나 혐오감을 느끼는 분들의 이용은
+                권장하지 않습니다.
+              </Typography.Text>
+            </li>
+            <li>
+              <Typography.Text
+                className="text-medium"
+                style={{ textWrap: "wrap" }}
+              >
+                이 테스트의 모든 질문은 당사자 간의 완벽한 합의를 바탕으로,
+                절대적으로 안전하다는 가정 하에 작성되었습니다.
+              </Typography.Text>
+            </li>
+            <li>
+              <Typography.Text
+                className="text-medium"
+                style={{ textWrap: "wrap" }}
+              >
+                이 테스트의 결과는 개발자의 주관적인 의견이 반영되어 있습니다.
+              </Typography.Text>
+            </li>
+            <li>
+              <Typography.Text
+                className="text-medium"
+                style={{ textWrap: "wrap" }}
+              >
+                테스트 결과에 대해서는 어떠한 의미 부여도 하지 마시고, 반드시
+                개인적인 참고 용도로만 사용하시기 바랍니다.
+              </Typography.Text>
+            </li>
+            <li>
+              <Typography.Text
+                className="text-medium"
+                style={{ textWrap: "wrap" }}
+              >
+                이 테스트를 참고하거나 활용하여 발생한 문제에 대한 책임은 모두
+                테스트를 이용한 당사자에게 있습니다.
+              </Typography.Text>
+            </li>
+          </Space>
+        </ul>
       </Modal>
 
       <div className={`container-${size} section-${theme}`}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { AxiosGet } from "../api";
+import { AxiosGet, AxiosPost } from "../api";
 import { useMediaQuery } from "react-responsive";
 import {
   Carousel,
@@ -10,25 +10,40 @@ import {
   Row,
   Col,
   Progress,
+  message,
+  Spin,
 } from "antd";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { useLocation, useNavigate } from "react-router-dom";
+import Loading from "../component/loading";
 
 function Questions(props) {
   const { theme, setPage } = props;
-  const [questions, setQuestions] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [answeredCount, setAnsweredCount] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState([]); // 각 질문의 선택된 답변을 추적
-  const [totalAnswers, setTotalAnswers] = useState([]);
-  const [resetAnswer, setResetAnswer] = useState(false); // 답변 초기화 상태
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [user, setUser] = useState(null);
+  const [questions, setQuestions] = useState([]); // 전체 질문
+  const [currentPage, setCurrentPage] = useState(1); // 모바일 사이즈 이상에서의 페이지 Number
+  const [currentSlide, setCurrentSlide] = useState(0); // 모바일에서의 슬라이드 Number
+  const [answeredCount, setAnsweredCount] = useState(0); // 답안 질문의 개수(프로그레스바에 사용)
+  const [totalAnswers, setTotalAnswers] = useState([]); // 각 질문의 선택된 답변을 저장(답안지)
+  const [loading, setLoading] = useState(false);
   const carouselRef = React.useRef(null);
 
   // Media queries
   const isSmallScreen = useMediaQuery({ maxWidth: 769 });
-  const isMediumScreen = useMediaQuery({ minWidth: 769, maxWidth: 1200 });
 
   const questionsPerPage = 5;
+
+  useEffect(() => {
+    try {
+      // home에서 입력했던 사용자 정보를 저장합니다.
+      console.log(location.state.user_info);
+      setUser(location.state.user_info);
+    } catch (error) {
+      console.error(error);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const getAllQuestions = async () => {
@@ -52,35 +67,63 @@ function Questions(props) {
     setCurrentSlide(current);
   };
 
-  const handleAnswerSelection = (questionIndex, result) => {
-    if (!selectedAnswers[questionIndex]) {
+  const handleAnswerSelection = (questionIndex, anwerIndex) => {
+    if (!totalAnswers[questionIndex]) {
       // 답변이 아직 선택되지 않은 경우에만 진행도 증가
       setAnsweredCount((prevCount) => prevCount + 1);
     }
 
-    // 해당 질문의 답변을 업데이트
-    const updatedAnswers = [...selectedAnswers];
-    updatedAnswers[questionIndex] = result;
-
-    console.log(updatedAnswers);
-    setSelectedAnswers(updatedAnswers);
-
-    setResetAnswer(false);
+    setTotalAnswers((prev) => {
+      return {
+        ...prev,
+        [questionIndex]: anwerIndex,
+      };
+    });
   };
 
   const handleNextQuestion = () => {
     setCurrentPage(currentPage + 1);
-    setResetAnswer(true); // 답변 초기화 상태 설정
   };
 
   const handlePrevQuestion = () => {
     setCurrentPage(currentPage - 1);
-    setResetAnswer(true); // 답변 초기화 상태 설정
   };
 
   const handleFinish = () => {
-    alert("모든 질문에 답변을 완료했습니다!");
-    console.log(totalAnswers);
+    if (answeredCount === questions.length) {
+      message.success("제출이 완료되었습니다.");
+      // 답안지를 서버로 전송
+      setLoading(true);
+      // 결과 계산
+      AxiosPost("/bdsm/calculate-scores", { answers: totalAnswers })
+        .then((res) => {
+          setLoading(false);
+          if (res.status === 200) {
+            console.log({ ...res.data.totalScores, ...user });
+            // DB에 저장하는 예제
+            AxiosPost("/bdsm/save-score-result", {
+              ...res.data.totalScores,
+              ...user,
+            })
+              .then((res) => {
+                if (res.status === 200) {
+                  console.log(res.data);
+                  // navigate("/result", { state: { answers: totalAnswers } });
+                }
+              })
+              .catch((error) => {
+                setLoading(false);
+                console.error(error);
+              });
+          }
+        })
+        .catch((error) => {
+          setLoading(false);
+          console.error(error);
+        });
+    } else {
+      message.error("미응답 질문이 존재해요!");
+    }
   };
 
   return (
@@ -88,6 +131,7 @@ function Questions(props) {
       className="center"
       style={{ minHeight: "100vh", width: "100%", maxWidth: "1024px" }}
     >
+      <Loading isLoding={loading} />
       <div
         style={{
           position: "sticky",
@@ -107,7 +151,6 @@ function Questions(props) {
           style={{ marginBottom: "20px" }}
         />
       </div>
-
       <div style={{ padding: "20px" }}>
         {isSmallScreen ? (
           <div>
@@ -123,26 +166,22 @@ function Questions(props) {
                       <Col span={24}>
                         <Typography.Text
                           className="text-medium"
-                          style={{ whiteSpace: "pre-line", fontWeight: "bold" }}
+                          style={{
+                            whiteSpace: "pre-line",
+                            fontWeight: "bold",
+                          }}
                         >
                           {value.question}
                         </Typography.Text>
                       </Col>
                       <Col span={24} style={{ flexGrow: 1 }}>
                         <Answer
-                          questionIndex={index}
+                          answers={totalAnswers}
                           question_pk={value.index}
-                          onSelect={(idx, result) => {
-                            console.log(idx, result);
-                            handleAnswerSelection(idx, result);
-                            if (answeredCount === questions.length - 1) {
-                              handleFinish();
-                              return;
-                            }
-
+                          onSelect={(questionIndex, anwerIndex) => {
+                            handleAnswerSelection(questionIndex, anwerIndex);
                             carouselRef.current.next();
                           }}
-                          reset={resetAnswer} // 초기화 상태 전달
                         />
                       </Col>
                     </Row>
@@ -203,17 +242,11 @@ function Questions(props) {
                       style={{ display: "flex", justifyContent: "center" }}
                     >
                       <Answer
-                        questionIndex={startIndex + index}
+                        answers={totalAnswers}
                         question_pk={value.index}
-                        onSelect={(idx, result) => {
-                          console.log(idx, result);
-                          handleAnswerSelection(idx, result);
-                          if (answeredCount === questions.length - 1) {
-                            handleFinish();
-                            return;
-                          }
+                        onSelect={(questionIndex, anwerIndex) => {
+                          handleAnswerSelection(questionIndex, anwerIndex);
                         }}
-                        reset={resetAnswer} // 초기화 상태 전달
                       />
                     </Col>
                   </Row>
@@ -252,7 +285,7 @@ function Questions(props) {
 
         {answeredCount === questions.length && (
           <div style={{ marginTop: "20px", textAlign: "center" }}>
-            <Button size="large" type="primary">
+            <Button size="large" type="primary" onClick={handleFinish}>
               🎉 BDSM 테스트 결과 보러가기 🎉
             </Button>
           </div>
@@ -273,28 +306,10 @@ const strList = [
 ];
 
 const Answer = (props) => {
-  const { question_pk, onSelect, reset, selectedAnswer } = props;
-  const [localSelectedAnswer, setLocalSelectedAnswer] =
-    useState(selectedAnswer);
-
-  // currentSlide가 변경되면 selectedAnswer를 초기화
-  useEffect(() => {
-    if (reset) {
-      setLocalSelectedAnswer(null); // reset이 true일 때만 초기화
-    } else {
-      setLocalSelectedAnswer(selectedAnswer);
-    }
-  }, [reset]); // reset이 변경될 때마다 호출
+  const { question_pk, onSelect, answers } = props;
 
   const onAnswer = async (index) => {
-    setLocalSelectedAnswer(index); // 선택된 답변 저장
-    await AxiosGet(`/bdsm/get-answers/${question_pk}`)
-      .then((res) => {
-        onSelect(res.data[index].index, res.data[index]);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+    onSelect(question_pk, index + 1);
   };
 
   return (
@@ -339,7 +354,7 @@ const Answer = (props) => {
               borderRadius: "100px",
               border: "2px solid",
               backgroundColor:
-                localSelectedAnswer === index ? "#8c8c8c" : "transparent", // 선택된 답변 강조
+                answers[question_pk] === index + 1 ? "#8c8c8c" : "transparent", // 선택된 답변 강조
               borderColor:
                 index === 6
                   ? "#f5222d"
