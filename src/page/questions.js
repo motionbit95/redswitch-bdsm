@@ -48,7 +48,7 @@ function Questions(props) {
   useEffect(() => {
     const getAllQuestions = async () => {
       try {
-        const res = await AxiosGet("/bdsm/list-all-questions");
+        const res = await AxiosGet("/bdsm/questions");
         setQuestions(res.data);
       } catch (error) {
         console.error("Failed to fetch questions:", error);

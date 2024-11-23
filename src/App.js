@@ -179,7 +179,7 @@ const App = () => {
             />
           </Routes>
         </BrowserRouter>
-        <FloatButton
+        {/* <FloatButton
           type={theme === "dark" ? "primary" : "default"}
           icon={theme === "dark" ? <Sun /> : <Moon />}
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -188,7 +188,7 @@ const App = () => {
             bottom: "20px",
             right: "20px",
           }}
-        />
+        /> */}
       </div>
     </ConfigProvider>
   );
